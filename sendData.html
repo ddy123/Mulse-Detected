@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转blob上传</title>
+    <style>
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput">
+     <div class="preview">
+            <h3>处理后的图片:</h3>
+            <img id="previewImage" src="" alt="预览图片">
+        </div>
+    <script>
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0]; // 获取文件
+    if (!file.type.match('image.*')) {
+        console.log('请选择图片文件');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const arrayBuffer = e.target.result; // 读取到的ArrayBuffer
+        const blob = new Blob([arrayBuffer], { type: file.type }); // 创建Blob对象
+        console.log(blob); // Blob对象
+
+        /* fetch('http://localhost:5001/detect_objects', {
+        method: 'POST',
+         mode: 'cors',  
+        body: blob,
+        headers: {
+            'Content-Type': blob.type
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(`正在发送`);
+        console.log(data)
+        // 处理检测结果
+        if (data.success) {
+           console.log('发送成功')
+           console.log((data))
+        }
+    })
+    .catch(error => {
+        console.error('发送失败');
+        console.log(error)
+    });
+ */
+    fetch('http://localhost:5001/detect_objects', {
+        method: 'POST',
+        /* mode: 'cors', */ 
+        body: blob,
+        headers: {
+            'Content-Type': blob.type,
+            'X-File-Name': file.name
+        }
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        // 创建Blob URL并设置为图片源
+                imageUrl = URL.createObjectURL(blob);
+                document.getElementById('previewImage').src = imageUrl;
+                console.log('图片显示成功');
+    })
+    .catch(error => {
+        console.error('发送失败');
+        console.log(error)
+    });
+    };
+    reader.readAsArrayBuffer(file); // 读取文件为ArrayBuffer
+});
+
+    </script>
+</body>
+</html>
