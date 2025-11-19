@@ -5,6 +5,7 @@ from flask_cors import CORS
 import cv2
 import numpy as np
 import io
+from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
@@ -30,17 +31,22 @@ def detect_objects():
     print(request.url+'\n')
     image_data = request.get_data()
     #print(image_data)
-    """  # 解码图像
+    # 解码图像
     nparr = np.frombuffer(image_data, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    cv2.imshow('YOLO物体检测 - 气味识别', image)  """
+    cv2.imshow('YOLO', image) 
+    cv2.waitKey()
     print(request.headers.get('X-File-Name'))
+    #print(image)
     # 创建内存中的图片文件 
-    img_io = io.BytesIO(image_data)
+    """ img_io = io.BytesIO(image_data)
+    img = Image.open(img_io)
+    img.show()  """
     # 直接返回图片给浏览器显示
-    return send_file(img_io, mimetype='image/jpeg')
+    #return send_file(img_io, mimetype='image/jpeg')
     #return "ok"
-    #return jsonify({"success": True}),200
+    
+    return jsonify({"success": True}),200
 
 if __name__ == '__main__':
     #app.run(debug=True)
