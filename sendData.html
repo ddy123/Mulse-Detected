@@ -27,7 +27,7 @@
         const blob = new Blob([arrayBuffer], { type: file.type }); // 创建Blob对象
         console.log(blob); // Blob对象
 
-        fetch('http://localhost:5001/detect_objects', {
+         /* fetch('http://localhost:5001/detect_objects', {
         //fetch('http://222.20.126.228:5002/detect_objects', {
         method: 'POST',
          mode: 'cors',  
@@ -50,7 +50,7 @@
     .catch(error => {
         console.error('发送失败');
         console.log(error)
-    });
+    });  */
  
 /*       fetch('http://localhost:5001/detect_objects', {
         method: 'POST',
@@ -72,6 +72,25 @@
         console.error('发送失败');
         console.log(error)
     }); */
+
+    const data = {
+                    command: 770,
+                };
+    fetch('http://localhost:8080', {
+        method: 'POST',
+        mode: 'cors',  
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then()
+    .catch(error => {
+        console.error('发送失败');
+        console.log(error)
+    });
+    
     };  
     reader.readAsArrayBuffer(file); // 读取文件为ArrayBuffer
 });

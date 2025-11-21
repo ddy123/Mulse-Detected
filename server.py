@@ -39,7 +39,7 @@ def detect_objects():
     #cv2.imshow('YOLO', image) 
     #cv2.waitKey()
     print(request.headers.get('X-File-Name'))
-    send_to_another_api(request.headers.get('X-File-Name'), 'http://127.0.0.1:5005/ble_server')
+    #send_to_another_api(request.headers.get('X-File-Name'), 'http://127.0.0.1:5005/ble_server')
     #print(image)
     # 创建内存中的图片文件 
     """ img_io = io.BytesIO(image_data)
