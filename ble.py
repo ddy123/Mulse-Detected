@@ -5,6 +5,7 @@ import asyncio
 from bleak import BleakScanner, BleakClient
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import numpy as np
 
 class BluetoothController:
     def __init__(self):
@@ -43,27 +44,117 @@ class BluetoothController:
         self.device_name = None
         return True
     
-    async def send_command(self, command):
+    async def send_command1(self, command):
         print(command)
         """通过蓝牙发送命令"""
         if not self.connected or not self.client:
+            print('返回')
             return False
-        
+        print('不返回')
         try:
             # 获取服务
             services = await self.client.get_services()
-            
+            print(services)
             # 查找第一个可写的特征
             for service in services:
                 for char in service.characteristics:
                     if 'write' in char.properties:
+                        print('发送')
                         # 将命令转换为字节并发送
                         command_bytes = command.encode('utf-8')
                         await self.client.write_gatt_char(char.uuid, command_bytes)
+                        
                         return True
             
             return False
         except Exception:
+            print(Exception)
+            return False
+        
+    async def send_command(self, command):
+        print(f"准备发送命令: {command}, 类型: {type(command)}")
+        
+        """通过蓝牙发送命令"""
+        if not self.connected or not self.client:
+            print('蓝牙未连接或客户端不存在')
+            return False
+        
+        print('蓝牙已连接，开始发送命令')
+        
+        try:
+            # 获取服务集合
+            services = self.client.services
+            print(f"服务集合类型: {type(services)}")
+            
+            # 查找可写的特征
+            writable_characteristics = []
+            service_count = 0
+            
+            # 遍历服务集合
+            for service in services:
+                service_count += 1
+                print(f"服务 {service_count}: UUID={service.uuid}")
+                
+                # 遍历特征
+                for char in service.characteristics:
+                    print(f"  特征 UUID: {char.uuid}, 属性: {char.properties}")
+                    if 'write' in char.properties:
+                        writable_characteristics.append((service.uuid, char.uuid, char.properties))
+            
+            print(f"找到 {service_count} 个服务, {len(writable_characteristics)} 个可写特征:")
+            for service_uuid, char_uuid, props in writable_characteristics:
+                print(f"  服务: {service_uuid}, 特征: {char_uuid}, 属性: {props}")
+            
+            if not writable_characteristics:
+                print("没有找到可写的特征")
+                return False
+            
+            # 使用第一个可写特征
+            service_uuid, char_uuid, props = writable_characteristics[0]
+            print(f"使用特征: {char_uuid} (服务: {service_uuid})")
+            
+            """ # 将命令转换为字节
+            if isinstance(command, (int, float)):
+                command = str(command)
+            
+            command_bytes = command.encode('utf-8')
+            print(f"发送字节数据: {command_bytes}") """
+            
+             # 统一将整数和字符串转换为2字节小端序二进制
+            if isinstance(command, int):
+                # 整数直接转换为2字节小端序
+                command_bytes = command.to_bytes(2, byteorder='little')
+            elif isinstance(command, str):
+                try:
+                    # 尝试将字符串转换为整数，然后转换为2字节小端序
+                    int_value = int(command)
+                    command_bytes = int_value.to_bytes(2, byteorder='little')
+                except ValueError:
+                    # 如果无法转换为整数，则使用原始字符串
+                    command_bytes = command.encode('raw_unicode_escape')
+            else:
+                # 其他类型尝试直接转换
+                command_bytes = bytes(command)
+            
+            print(f"发送原始字节数据: {command_bytes}")
+            print(f"字节数据长度: {len(command_bytes)} 字节")
+            print(f"字节数据十六进制: {command_bytes.hex()}")
+            print(f"字节数据二进制: {''.join(f'{byte:08b}' for byte in command_bytes)}")
+            
+            """ uint16_array = np.array([48486], dtype=np.uint16)
+            uint16_bytes = uint16_array.tobytes()
+            print(f"字节表示: {uint16_bytes}")
+            print(f"字节十六进制: {uint16_bytes.hex()}") """
+            # 写入特征值
+            await self.client.write_gatt_char(char_uuid, command_bytes)
+            print('命令发送成功')
+            
+            return True
+            
+        except Exception as e:
+            print(f"发送命令时发生错误: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
